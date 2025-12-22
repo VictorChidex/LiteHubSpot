@@ -2,7 +2,14 @@ from datetime import datetime
 import uuid
 
 class MockBackendService:
-    _users = {}  # {email: {id, email, username, password}}
+    _users = {
+        "admin@example.com": {
+            "id": "default-admin-id",
+            "email": "admin@example.com",
+            "username": "admin",
+            "password": "password"
+        }
+    }
     _todos = {}  # {id: {id, user_id, title, due_date, resolved}}
     
     @classmethod
