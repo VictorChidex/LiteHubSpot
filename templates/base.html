@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LiteHubSpot{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="/" class="brand">LiteHubSpot</a>
+            <nav>
+                {% if request.session.user_id %}
+                    <span>Hello, {{ request.session.username }}</span>
+                    <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'signup' %}" class="nav-link">Sign Up</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

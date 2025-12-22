@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}My Todos - LiteHubSpot{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-top:0">Create New Todo</h2>
+    <form method="POST" action="{% url 'todo-create' %}" style="display: flex; gap: 1rem; align-items: flex-end;">
+        {% csrf_token %}
+        <div style="flex-grow: 1;">
+            <label for="title">Task</label>
+            <input type="text" id="title" name="title" placeholder="What needs to be done?" required>
+        </div>
+        <div style="width: 150px;">
+            <label for="due_date">Due Date</label>
+            <input type="date" id="due_date" name="due_date">
+        </div>
+        <button type="submit" class="btn">Add</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2 style="margin-top:0">Your Todos</h2>
+    {% if todos %}
+    {% for todo in todos %}
+    <div class="todo-item {% if todo.resolved %}completed{% endif %}">
+
+        <!-- Toggle Form -->
+        <form method="POST" action="{% url 'todo-resolve' todo.id %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn-link"
+                title="{% if todo.resolved %}Mark Unresolved{% else %}Mark Resolved{% endif %}">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    {% if todo.resolved %}
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    {% else %}
+                    <circle cx="12" cy="12" r="10"></circle>
+                    {% endif %}
+                </svg>
+            </button>
+        </form>
+
+        <div class="todo-content">
+            <span class="todo-title">{{ todo.title }}</span>
+            {% if todo.due_date %}
+            <span class="todo-meta">Due: {{ todo.due_date }}</span>
+            {% endif %}
+        </div>
+
+        <div class="actions">
+            <!-- Edit Button (Triggers simple JS prompt for MVP equivalent) -->
+            <!-- Ideally we'd have a modal, but for simplicity let's do a details toggle or js prompt which is "interactive" enough for this demo or better yet, a small integrated form? 
+                         Let's keep it clean. I'll make the Update form hidden/toggleable. -->
+            <button onclick="document.getElementById('edit-{{ todo.id }}').style.display = 'block'"
+                class="btn-sm btn-link">Edit</button>
+
+            <form method="POST" action="{% url 'todo-delete' todo.id %}" style="margin:0;"
+                onsubmit="return confirm('Delete this task?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-sm btn-link" style="color:var(--danger)">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden Edit Form -->
+    <div id="edit-{{ todo.id }}"
+        style="display:none; padding: 1rem; background: var(--background); margin-top: 0.5rem; border-radius: 4px;">
+        <form method="POST" action="{% url 'todo-update' todo.id %}">
+            {% csrf_token %}
+            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem">
+                <input type="text" name="title" value="{{ todo.title }}" required>
+                <input type="date" name="due_date" value="{{ todo.due_date }}">
+            </div>
+            <div style="display:flex; gap:0.5rem">
+                <button type="submit" class="btn btn-sm">Save</button>
+                <button type="button" class="btn btn-sm" style="background:#ddd; color:#333"
+                    onclick="document.getElementById('edit-{{ todo.id }}').style.display = 'none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    {% endfor %}
+    {% else %}
+    <p class="text-muted">No todos yet. Add one above!</p>
+    {% endif %}
+</div>
+{% endblock %}
