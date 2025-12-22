@@ -34,6 +34,7 @@ LiteHubSpot is a lightweight, Django-based Todo application designed to demonstr
 
 3. **Run the Server**:
    ```bash
+   cd frontend
    python3 manage.py runserver
    ```
    *Note: You do not need to run `makemigrations` or `migrate` because the app uses a mock in-memory store and bypasses the default database.*
@@ -46,6 +47,7 @@ LiteHubSpot is a lightweight, Django-based Todo application designed to demonstr
 The application comes with a suite of unit and integration tests covering the mock service and views.
 
 ```bash
+cd frontend
 python3 manage.py test todos
 ```
 

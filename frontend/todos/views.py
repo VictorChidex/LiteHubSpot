@@ -21,11 +21,11 @@ class SignupView(View):
 
     def post(self, request):
         data = request.POST
-        username = data.get('username')
+        email = data.get('email')
         password = data.get('password')
         
         try:
-            MockBackendService.register_user(username, password)
+            MockBackendService.register_user(email, password)
             messages.success(request, "Account created! Please login.")
             return redirect('login')
         except ValueError as e:
@@ -38,14 +38,13 @@ class LoginView(View):
 
     def post(self, request):
         data = request.POST
-        username = data.get('username')
+        email = data.get('email')
         password = data.get('password')
         
-        user = MockBackendService.authenticate_user(username, password)
+        user = MockBackendService.authenticate_user(email, password)
         if user:
             request.session['user_id'] = user['id']
-            # Also store username for easy access in templates if needed, though we can fetch it.
-            request.session['username'] = user['username'] 
+            request.session['email'] = user['email'] 
             return redirect('todo-list')
         else:
             messages.error(request, "Invalid credentials")

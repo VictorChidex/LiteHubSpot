@@ -2,25 +2,25 @@ from datetime import datetime
 import uuid
 
 class MockBackendService:
-    _users = {}  # {username: {id, username, password}}
+    _users = {}  # {email: {id, email, password}}
     _todos = {}  # {id: {id, user_id, title, due_date, resolved}}
     
     @classmethod
-    def register_user(cls, username, password):
-        if username in cls._users:
-            raise ValueError("Username already taken")
+    def register_user(cls, email, password):
+        if email in cls._users:
+            raise ValueError("Email already requested")
         user_id = str(uuid.uuid4())
         user = {
             "id": user_id,
-            "username": username,
-            "password": password  # In a mock, we store plain text for simplicity, or hash it if needed. Plain text is fine for "mock".
+            "email": email,
+            "password": password
         }
-        cls._users[username] = user
+        cls._users[email] = user
         return user
 
     @classmethod
-    def authenticate_user(cls, username, password):
-        user = cls._users.get(username)
+    def authenticate_user(cls, email, password):
+        user = cls._users.get(email)
         if user and user["password"] == password:
             return user
         return None
