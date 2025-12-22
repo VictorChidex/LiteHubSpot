@@ -1,98 +1,136 @@
 {% extends 'base.html' %}
 
-{% block title %}My Todos - LiteHubSpot{% endblock %}
+{% block title %}My Tasks - LiteHubSpot{% endblock %}
+
+{% block page_title %}My Tasks{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 style="margin-top:0">Create New Todo</h2>
-    <form method="POST" action="{% url 'todo-create' %}"
-        style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+<!-- Create Task Card -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Create New Task</h3>
+    <form method="POST" action="{% url 'todo-create' %}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
         {% csrf_token %}
-        <div style="flex-grow: 1; min-width: 200px;">
-            <label for="title">Task</label>
-            <input type="text" id="title" name="title" placeholder="What needs to be done?" required>
+        <div class="md:col-span-3">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Task Title <span class="text-red-500">*</span></label>
+            <input type="text" id="title" name="title" placeholder="e.g., Follow up with lead..." 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
         </div>
-        <div style="flex-grow: 1; min-width: 200px;">
-            <label for="description">Description (Optional)</label>
-            <input type="text" id="description" name="description" placeholder="Details...">
+        <div>
+            <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+            <input type="date" id="due_date" name="due_date" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
         </div>
-        <div style="width: 150px;">
-            <label for="due_date">Due Date</label>
-            <input type="date" id="due_date" name="due_date">
+        <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <input type="text" id="description" name="description" placeholder="Optional details" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
         </div>
-        <button type="submit" class="btn">Add</button>
+        <div class="md:col-span-3">
+            <button type="submit" class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                <i class="fas fa-plus mr-2"></i>Create Task
+            </button>
+        </div>
     </form>
 </div>
 
-<div class="card">
-    <h2 style="margin-top:0">Your Todos</h2>
+<!-- Tasks List -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-900">Tasks</h3>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            {{ todos|length }} Active
+        </span>
+    </div>
+
     {% if todos %}
-    {% for todo in todos %}
-    <div class="todo-item {% if todo.resolved %}completed{% endif %}">
+    <div class="divide-y divide-gray-200">
+        {% for todo in todos %}
+        <div class="p-6 hover:bg-gray-50 transition duration-150 group {% if todo.resolved %}opacity-60{% endif %}">
+            <div class="flex items-start space-x-4">
+                <!-- Status Toggle -->
+                <form method="POST" action="{% url 'todo-resolve' todo.id %}" class="flex-shrink-0">
+                    {% csrf_token %}
+                    <button type="submit" class="w-6 h-6 rounded-full border-2 border-gray-300 hover:border-primary flex items-center justify-center transition duration-200 {% if todo.resolved %}bg-green-500 border-green-500{% endif %}" 
+                            title="{% if todo.resolved %}Mark Unresolved{% else %}Complete Task{% endif %}">
+                        {% if todo.resolved %}
+                        <i class="fas fa-check text-white text-xs"></i>
+                        {% endif %}
+                    </button>
+                </form>
 
-        <!-- Toggle Form -->
-        <form method="POST" action="{% url 'todo-resolve' todo.id %}" style="margin:0;">
-            {% csrf_token %}
-            <button type="submit" class="btn-link"
-                title="{% if todo.resolved %}Mark Unresolved{% else %}Mark Resolved{% endif %}">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    {% if todo.resolved %}
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    {% else %}
-                    <circle cx="12" cy="12" r="10"></circle>
+                <!-- Task Content -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-medium text-gray-900 {% if todo.resolved %}line-through text-gray-500{% endif %}">
+                            {{ todo.title }}
+                        </h4>
+                        <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition duration-200">
+                            <button onclick="document.getElementById('edit-{{ todo.id }}').classList.remove('hidden')" 
+                                    class="text-primary hover:text-blue-700 text-sm font-medium">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form method="POST" action="{% url 'todo-delete' todo.id %}" class="inline" 
+                                  onsubmit="return confirm('Delete this task?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% if todo.description %}
+                    <p class="mt-1 text-sm text-gray-600 {% if todo.resolved %}text-gray-400{% endif %}">{{ todo.description }}</p>
                     {% endif %}
-                </svg>
-            </button>
-        </form>
-
-        <div class="todo-content">
-            <span class="todo-title">{{ todo.title }}</span>
-            {% if todo.description %}
-            <div style="font-size: 0.9rem; color: #555; margin-top: 0.25rem;">{{ todo.description }}</div>
-            {% endif %}
-            {% if todo.due_date %}
-            <span class="todo-meta">Due: {{ todo.due_date }}</span>
-            {% endif %}
-        </div>
-
-        <div class="actions">
-            <!-- Edit Button (Triggers simple JS prompt for MVP equivalent) -->
-            <!-- Ideally we'd have a modal, but for simplicity let's do a details toggle or js prompt which is "interactive" enough for this demo or better yet, a small integrated form?
-                         Let's keep it clean. I'll make the Update form hidden/toggleable. -->
-            <button onclick="document.getElementById('edit-{{ todo.id }}').style.display = 'block'"
-                class="btn-sm btn-link">Edit</button>
-
-            <form method="POST" action="{% url 'todo-delete' todo.id %}" style="margin:0;"
-                onsubmit="return confirm('Delete this task?');">
-                {% csrf_token %}
-                <button type="submit" class="btn-sm btn-link" style="color:var(--danger)">Delete</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Hidden Edit Form -->
-    <div id="edit-{{ todo.id }}"
-        style="display:none; padding: 1rem; background: var(--background); margin-top: 0.5rem; border-radius: 4px;">
-        <form method="POST" action="{% url 'todo-update' todo.id %}">
-            {% csrf_token %}
-            <div style="display:flex; flex-direction: column; gap:0.5rem; margin-bottom:0.5rem">
-                <input type="text" name="title" value="{{ todo.title }}" required>
-                <input type="text" name="description" value="{{ todo.description|default:'' }}"
-                    placeholder="Description">
-                <input type="date" name="due_date" value="{{ todo.due_date }}">
+                    {% if todo.due_date %}
+                    <p class="mt-2 text-xs text-gray-500 uppercase tracking-wide">
+                        <i class="fas fa-calendar-alt mr-1"></i>Due {{ todo.due_date }}
+                    </p>
+                    {% endif %}
+                </div>
             </div>
-            <div style="display:flex; gap:0.5rem">
-                <button type="submit" class="btn btn-sm">Save</button>
-                <button type="button" class="btn btn-sm" style="background:#ddd; color:#333"
-                    onclick="document.getElementById('edit-{{ todo.id }}').style.display = 'none'">Cancel</button>
-            </div>
-        </form>
-    </div>
 
-    {% endfor %}
+            <!-- Edit Form (Hidden by default) -->
+            <div id="edit-{{ todo.id }}" class="hidden mt-4 p-4 bg-gray-50 rounded-md">
+                <h5 class="text-sm font-medium text-gray-900 mb-3">Edit Task</h5>
+                <form method="POST" action="{% url 'todo-update' todo.id %}">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            <input type="text" name="title" value="{{ todo.title }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <input type="text" name="description" value="{{ todo.description|default:'' }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                            <input type="date" name="due_date" value="{{ todo.due_date }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="submit" class="bg-primary hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md transition duration-200">
+                            Save Changes
+                        </button>
+                        <button type="button" onclick="document.getElementById('edit-{{ todo.id }}').classList.add('hidden')" 
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium py-2 px-3 rounded-md transition duration-200">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-    <p class="text-muted">No todos yet. Add one above!</p>
+    <div class="text-center py-12">
+        <i class="fas fa-clipboard-list text-gray-300 text-4xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No tasks yet</h3>
+        <p class="text-gray-500">Create your first task above to get started!</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -6,38 +6,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LiteHubSpot{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1f2937',
+                        accent: '#f59e0b'
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <header>
-        <div class="header-content">
-            <a href="/" class="brand">LiteHubSpot</a>
-            <nav>
-                {% if request.session.user_id %}
-                <span>Hello, {{ request.session.username }}</span>
-                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
-                {% else %}
-                <a href="{% url 'login' %}" class="nav-link">Login</a>
-                <a href="{% url 'signup' %}" class="nav-link">Sign Up</a>
-                {% endif %}
-            </nav>
-        </div>
-    </header>
-
-    <div class="container">
-        {% if messages %}
-        <div class="flash-messages">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
+<body class="bg-gray-50 text-gray-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-primary">LiteHubSpot</h1>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+            <nav class="px-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'todo-list' %}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-tasks mr-3"></i>
+                            Tasks
+                        </a>
+                    </li>
+                    {% if request.session.user_id %}
+                    <li>
+                        <a href="{% url 'logout' %}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            Logout
+                        </a>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="{% url 'login' %}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-sign-in-alt mr-3"></i>
+                            Login
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'signup' %}" class="flex items-center px-4 py-2 bg-primary text-white rounded-lg">
+                            <i class="fas fa-user-plus mr-3"></i>
+                            Sign Up
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </aside>
 
-        {% block content %}
-        {% endblock %}
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto">
+            <header class="bg-white shadow-sm px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">{% block page_title %}Dashboard{% endblock %}</h2>
+                    {% if request.session.user_id %}
+                    <span class="text-sm text-gray-600">Welcome, {{ request.session.username }}</span>
+                    {% endif %}
+                </div>
+            </header>
+
+            <div class="p-6">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
     </div>
 </body>
 
