@@ -9,17 +9,24 @@ class MockBackendServiceTests(TestCase):
         MockBackendService._todos = {}
 
     def test_register_and_auth_user(self):
-        MockBackendService.register_user('test@test.com', 'password123')
-        user = MockBackendService.authenticate_user('test@test.com', 'password123')
-        self.assertIsNotNone(user)
-        self.assertEqual(user['email'], 'test@test.com')
+        MockBackendService.register_user('test@test.com', 'testuser', 'password123')
+        
+        # Auth with Email
+        user1 = MockBackendService.authenticate_user('test@test.com', 'password123')
+        self.assertIsNotNone(user1)
+        self.assertEqual(user1['username'], 'testuser')
+
+        # Auth with Username
+        user2 = MockBackendService.authenticate_user('testuser', 'password123')
+        self.assertIsNotNone(user2)
+        self.assertEqual(user2['email'], 'test@test.com')
         
         # Test wrong password
-        failed = MockBackendService.authenticate_user('test@test.com', 'wrong')
+        failed = MockBackendService.authenticate_user('testuser', 'wrong')
         self.assertIsNone(failed)
 
     def test_crud_todos(self):
-        user = MockBackendService.register_user('user1@test.com', 'pass')
+        user = MockBackendService.register_user('user1@test.com', 'user1', 'pass')
         user_id = user['id']
         
         # Create
@@ -47,13 +54,14 @@ class TodoViewsTests(TestCase):
         MockBackendService._todos = {}
         self.client = Client()
         # Register a user
-        self.user = MockBackendService.register_user('viewuser@test.com', 'pass')
+        self.user = MockBackendService.register_user('viewuser@test.com', 'viewuser', 'pass')
 
     def login(self):
         # Simulate login by setting session directly since we mock auth
         session = self.client.session
         session['user_id'] = self.user['id']
         session['email'] = self.user['email']
+        session['username'] = self.user['username']
         session.save()
 
     def test_redirect_if_not_logged_in(self):
@@ -61,11 +69,14 @@ class TodoViewsTests(TestCase):
         self.assertRedirects(response, reverse('login'))
 
     def test_login_view(self):
-        response = self.client.post(reverse('login'), {'email': 'viewuser@test.com', 'password': 'pass'})
+        # Login with username
+        response = self.client.post(reverse('login'), {'identifier': 'viewuser', 'password': 'pass'})
         self.assertRedirects(response, reverse('todo-list'))
-        # Check session
-        session = self.client.session
-        self.assertEqual(session['user_id'], self.user['id'])
+        
+        # Login with email
+        self.client.logout()
+        response = self.client.post(reverse('login'), {'identifier': 'viewuser@test.com', 'password': 'pass'})
+        self.assertRedirects(response, reverse('todo-list'))
 
     def test_create_todo(self):
         self.login()

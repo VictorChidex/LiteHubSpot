@@ -22,10 +22,11 @@ class SignupView(View):
     def post(self, request):
         data = request.POST
         email = data.get('email')
+        username = data.get('username')
         password = data.get('password')
         
         try:
-            MockBackendService.register_user(email, password)
+            MockBackendService.register_user(email, username, password)
             messages.success(request, "Account created! Please login.")
             return redirect('login')
         except ValueError as e:
@@ -38,13 +39,14 @@ class LoginView(View):
 
     def post(self, request):
         data = request.POST
-        email = data.get('email')
+        identifier = data.get('identifier')
         password = data.get('password')
         
-        user = MockBackendService.authenticate_user(email, password)
+        user = MockBackendService.authenticate_user(identifier, password)
         if user:
             request.session['user_id'] = user['id']
-            request.session['email'] = user['email'] 
+            request.session['email'] = user['email']
+            request.session['username'] = user['username'] 
             return redirect('todo-list')
         else:
             messages.error(request, "Invalid credentials")

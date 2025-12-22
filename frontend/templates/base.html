@@ -15,7 +15,7 @@
             <a href="/" class="brand">LiteHubSpot</a>
             <nav>
                 {% if request.session.user_id %}
-                <span>Hello, {{ request.session.email }}</span>
+                <span>Hello, {{ request.session.username }}</span>
                 <a href="{% url 'logout' %}" class="nav-link">Logout</a>
                 {% else %}
                 <a href="{% url 'login' %}" class="nav-link">Login</a>

@@ -2,27 +2,39 @@ from datetime import datetime
 import uuid
 
 class MockBackendService:
-    _users = {}  # {email: {id, email, password}}
+    _users = {}  # {email: {id, email, username, password}}
     _todos = {}  # {id: {id, user_id, title, due_date, resolved}}
     
     @classmethod
-    def register_user(cls, email, password):
-        if email in cls._users:
-            raise ValueError("Email already requested")
+    def register_user(cls, email, username, password):
+        # Check uniqueness
+        for user in cls._users.values():
+            if user['email'] == email:
+                raise ValueError("Email already registered")
+            if user['username'] == username:
+                raise ValueError("Username already taken")
+                
         user_id = str(uuid.uuid4())
         user = {
             "id": user_id,
             "email": email,
+            "username": username,
             "password": password
         }
         cls._users[email] = user
         return user
 
     @classmethod
-    def authenticate_user(cls, email, password):
-        user = cls._users.get(email)
-        if user and user["password"] == password:
-            return user
+    def authenticate_user(cls, identifier, password):
+        # identifier can be email or username
+        found_user = None
+        for user in cls._users.values():
+            if user['email'] == identifier or user['username'] == identifier:
+                found_user = user
+                break
+        
+        if found_user and found_user["password"] == password:
+            return found_user
         return None
 
     @classmethod
