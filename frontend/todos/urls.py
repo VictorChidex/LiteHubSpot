@@ -11,4 +11,5 @@ urlpatterns = [
     path('update/<str:todo_id>/', views.TodoUpdateView.as_view(), name='todo-update'),
     path('delete/<str:todo_id>/', views.TodoDeleteView.as_view(), name='todo-delete'),
     path('resolve/<str:todo_id>/', views.TodoResolveView.as_view(), name='todo-resolve'),
+    path('status/<str:todo_id>/', views.TodoStatusView.as_view(), name='todo-status'),
 ]

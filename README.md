@@ -6,9 +6,11 @@ LiteHubSpot is a lightweight, Django-based Todo application designed to demonstr
 
 - **User Authentication**: Sign up and Log in functionality (session-based).
 - **Todo Management**:
-    - Create new tasks with due dates and descriptions.
-    - View a list of your tasks in a clean, card-based layout.
+    - Create new tasks with due dates, descriptions, priorities, and statuses.
+    - View tasks in List or Board view (inspired by ClickUp, Notion, Monday.com).
     - **Interactive Actions**: Mark tasks as resolved/unresolved, Edit details, and Delete tasks.
+    - **Priority Levels**: Low, Medium, High, Urgent with color-coded badges.
+    - **Status Workflow**: To Do, In Progress, Done with board columns.
 - **Modern UI**: Professional interface with sidebar navigation, inspired by tools like ClickUp, Notion, and Monday.com.
 - **Mock Backend**: Uses an in-memory `MockBackendService` to simulate a database.
 - **Responsive Design**: Built with Tailwind CSS for a modern, clean look.

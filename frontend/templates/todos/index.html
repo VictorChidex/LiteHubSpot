@@ -5,27 +5,57 @@
 {% block page_title %}My Tasks{% endblock %}
 
 {% block content %}
+<!-- View Switcher -->
+<div class="mb-6 flex justify-between items-center">
+    <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+        <a href="?view=list" class="px-4 py-2 rounded-md text-sm font-medium {% if view == 'list' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-600 hover:text-gray-900{% endif %}">List</a>
+        <a href="?view=board" class="px-4 py-2 rounded-md text-sm font-medium {% if view == 'board' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-600 hover:text-gray-900{% endif %}">Board</a>
+    </div>
+    <div class="text-sm text-gray-600">
+        {{ todos|length }} tasks
+    </div>
+</div>
+
 <!-- Create Task Card -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Create New Task</h3>
-    <form method="POST" action="{% url 'todo-create' %}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <form method="POST" action="{% url 'todo-create' %}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         {% csrf_token %}
-        <div class="md:col-span-3">
+        <div class="md:col-span-2">
             <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Task Title <span class="text-red-500">*</span></label>
             <input type="text" id="title" name="title" placeholder="e.g., Follow up with lead..." 
                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
         </div>
         <div>
+            <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select id="priority" name="priority" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+            </select>
+        </div>
+        <div>
+            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="status" name="status" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="to_do" selected>To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Done</option>
+            </select>
+        </div>
+        <div class="md:col-span-2">
             <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
             <input type="date" id="due_date" name="due_date" 
                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
         </div>
-        <div>
+        <div class="md:col-span-2">
             <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <input type="text" id="description" name="description" placeholder="Optional details" 
                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
         </div>
-        <div class="md:col-span-3">
+        <div class="md:col-span-4 flex justify-end">
             <button type="submit" class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
                 <i class="fas fa-plus mr-2"></i>Create Task
             </button>
@@ -34,12 +64,10 @@
 </div>
 
 <!-- Tasks List -->
+{% if view == 'list' %}
 <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+    <div class="px-6 py-4 border-b border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900">Tasks</h3>
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {{ todos|length }} Active
-        </span>
     </div>
 
     {% if todos %}
@@ -64,15 +92,22 @@
                         <h4 class="text-sm font-medium text-gray-900 {% if todo.resolved %}line-through text-gray-500{% endif %}">
                             {{ todo.title }}
                         </h4>
-                        <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition duration-200">
+                        <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition duration-200">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                {% if todo.priority == 'urgent' %}bg-red-100 text-red-800
+                                {% elif todo.priority == 'high' %}bg-orange-100 text-orange-800
+                                {% elif todo.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ todo.priority|title }}
+                            </span>
                             <button onclick="document.getElementById('edit-{{ todo.id }}').classList.remove('hidden')" 
-                                    class="text-primary hover:text-blue-700 text-sm font-medium">
+                                    class="text-primary hover:text-blue-700 text-sm">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <form method="POST" action="{% url 'todo-delete' todo.id %}" class="inline" 
                                   onsubmit="return confirm('Delete this task?');">
                                 {% csrf_token %}
-                                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                <button type="submit" class="text-red-500 hover:text-red-700 text-sm">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -94,20 +129,39 @@
                 <h5 class="text-sm font-medium text-gray-900 mb-3">Edit Task</h5>
                 <form method="POST" action="{% url 'todo-update' todo.id %}">
                     {% csrf_token %}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div class="md:col-span-3">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                             <input type="text" name="title" value="{{ todo.title }}" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <input type="text" name="description" value="{{ todo.description|default:'' }}" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select name="priority" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if todo.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>High</option>
+                                <option value="urgent" {% if todo.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select name="status" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="to_do" {% if todo.status == 'to_do' %}selected{% endif %}>To Do</option>
+                                <option value="in_progress" {% if todo.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="done" {% if todo.status == 'done' %}selected{% endif %}>Done</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
                             <input type="date" name="due_date" value="{{ todo.due_date }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <input type="text" name="description" value="{{ todo.description|default:'' }}" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                     </div>
@@ -133,4 +187,152 @@
     </div>
     {% endif %}
 </div>
+
+{% elif view == 'board' %}
+<!-- Board View -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for status, status_name, status_color, tasks in status_tasks %}
+    <div class="bg-gray-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">{{ status_name }}</h3>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-{{ status_color }}-100 text-{{ status_color }}-800">
+                {{ tasks|length }}
+            </span>
+        </div>
+        <div class="space-y-3">
+            {% for todo in tasks %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition duration-200 group">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-medium text-gray-900 mb-1 {% if todo.resolved %}line-through text-gray-500{% endif %}">
+                            {{ todo.title }}
+                        </h4>
+                        {% if todo.description %}
+                        <p class="text-xs text-gray-600 mb-2">{{ todo.description|truncatechars:50 }}</p>
+                        {% endif %}
+                        <div class="flex items-center space-x-2">
+                            {% if todo.priority %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium 
+                                {% if todo.priority == 'urgent' %}bg-red-100 text-red-800
+                                {% elif todo.priority == 'high' %}bg-orange-100 text-orange-800
+                                {% elif todo.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ todo.priority|title }}
+                            </span>
+                            {% endif %}
+                            {% if todo.due_date %}
+                            <span class="text-xs text-gray-500">
+                                <i class="fas fa-calendar-alt mr-1"></i>{{ todo.due_date }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition duration-200">
+                        <button onclick="document.getElementById('edit-{{ todo.id }}').classList.remove('hidden')" 
+                                class="text-primary hover:text-blue-700 text-xs">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form method="POST" action="{% url 'todo-delete' todo.id %}" class="inline" 
+                              onsubmit="return confirm('Delete this task?');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-500 hover:text-red-700 text-xs">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Status Change Buttons -->
+                <div class="mt-3 flex space-x-1">
+                    {% if status != 'to_do' %}
+                    <form method="POST" action="{% url 'todo-status' todo.id %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="to_do">
+                        <button type="submit" class="text-xs text-gray-500 hover:text-gray-700">To Do</button>
+                    </form>
+                    {% endif %}
+                    {% if status != 'in_progress' %}
+                    <form method="POST" action="{% url 'todo-status' todo.id %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="in_progress">
+                        <button type="submit" class="text-xs text-blue-500 hover:text-blue-700">In Progress</button>
+                    </form>
+                    {% endif %}
+                    {% if status != 'done' %}
+                    <form method="POST" action="{% url 'todo-status' todo.id %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="done">
+                        <button type="submit" class="text-xs text-green-500 hover:text-green-700">Done</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-gray-400">
+                <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                <p class="text-xs">No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Edit Modal for Board View -->
+{% for todo in todos %}
+<div id="edit-{{ todo.id }}" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Task</h3>
+            <form method="POST" action="{% url 'todo-update' todo.id %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input type="text" name="title" value="{{ todo.title }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select name="priority" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if todo.priority == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>High</option>
+                        <option value="urgent" {% if todo.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="to_do" {% if todo.status == 'to_do' %}selected{% endif %}>To Do</option>
+                        <option value="in_progress" {% if todo.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="done" {% if todo.status == 'done' %}selected{% endif %}>Done</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input type="date" name="due_date" value="{{ todo.due_date }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <input type="text" name="description" value="{{ todo.description|default:'' }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="flex space-x-2">
+                    <button type="submit" class="bg-primary hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md transition duration-200">
+                        Save Changes
+                    </button>
+                    <button type="button" onclick="document.getElementById('edit-{{ todo.id }}').classList.add('hidden')" 
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium py-2 px-3 rounded-md transition duration-200">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endif %}
 {% endblock %}
