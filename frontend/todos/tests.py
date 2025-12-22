@@ -30,8 +30,9 @@ class MockBackendServiceTests(TestCase):
         user_id = user['id']
         
         # Create
-        todo = MockBackendService.create_todo(user_id, 'Test Task', '2025-01-01')
+        todo = MockBackendService.create_todo(user_id, 'Test Task', '2025-01-01', 'My Description')
         self.assertEqual(todo['title'], 'Test Task')
+        self.assertEqual(todo['description'], 'My Description')
         self.assertFalse(todo['resolved'])
         
         # Read
@@ -39,8 +40,9 @@ class MockBackendServiceTests(TestCase):
         self.assertEqual(len(todos), 1)
         
         # Update
-        updated = MockBackendService.update_todo(todo['id'], title='Updated Task', resolved=True)
+        updated = MockBackendService.update_todo(todo['id'], title='Updated Task', resolved=True, description='New Desc')
         self.assertEqual(updated['title'], 'Updated Task')
+        self.assertEqual(updated['description'], 'New Desc')
         self.assertTrue(updated['resolved'])
         
         # Delete
@@ -57,12 +59,8 @@ class TodoViewsTests(TestCase):
         self.user = MockBackendService.register_user('viewuser@test.com', 'viewuser', 'pass')
 
     def login(self):
-        # Simulate login by setting session directly since we mock auth
-        session = self.client.session
-        session['user_id'] = self.user['id']
-        session['email'] = self.user['email']
-        session['username'] = self.user['username']
-        session.save()
+        # Perform real login since signed_cookies session backend makes direct manipulation diffcult in tests
+        self.client.post(reverse('login'), {'identifier': 'viewuser', 'password': 'pass'})
 
     def test_redirect_if_not_logged_in(self):
         response = self.client.get(reverse('todo-list'))
@@ -82,12 +80,14 @@ class TodoViewsTests(TestCase):
         self.login()
         response = self.client.post(reverse('todo-create'), {
             'title': 'New Todo',
-            'due_date': '2025-12-31'
+            'due_date': '2025-12-31',
+            'description': 'Details here'
         })
         self.assertRedirects(response, reverse('todo-list'))
         todos = MockBackendService.get_todos(self.user['id'])
         self.assertEqual(len(todos), 1)
         self.assertEqual(todos[0]['title'], 'New Todo')
+        self.assertEqual(todos[0]['description'], 'Details here')
 
     def test_interactivity(self):
         self.login()

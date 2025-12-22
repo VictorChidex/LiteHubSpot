@@ -119,3 +119,6 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# Use signed cookies for sessions to avoid needing a database table
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"

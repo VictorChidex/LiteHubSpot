@@ -68,8 +68,9 @@ class TodoCreateView(AuthMixin, View):
         user = self.get_user(request)
         title = request.POST.get('title')
         due_date = request.POST.get('due_date')
+        description = request.POST.get('description', '')
         if title:
-            MockBackendService.create_todo(user['id'], title, due_date)
+            MockBackendService.create_todo(user['id'], title, due_date, description)
             messages.success(request, "Todo created!")
         return redirect('todo-list')
 
@@ -82,7 +83,8 @@ class TodoUpdateView(AuthMixin, View):
         if todo and todo['user_id'] == user['id']:
             title = request.POST.get('title')
             due_date = request.POST.get('due_date')
-            MockBackendService.update_todo(todo_id, title=title, due_date=due_date)
+            description = request.POST.get('description', '')
+            MockBackendService.update_todo(todo_id, title=title, due_date=due_date, description=description)
         return redirect('todo-list')
 
 class TodoDeleteView(AuthMixin, View):

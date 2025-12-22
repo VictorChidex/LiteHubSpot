@@ -5,11 +5,16 @@
 {% block content %}
 <div class="card">
     <h2 style="margin-top:0">Create New Todo</h2>
-    <form method="POST" action="{% url 'todo-create' %}" style="display: flex; gap: 1rem; align-items: flex-end;">
+    <form method="POST" action="{% url 'todo-create' %}"
+        style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
         {% csrf_token %}
-        <div style="flex-grow: 1;">
+        <div style="flex-grow: 1; min-width: 200px;">
             <label for="title">Task</label>
             <input type="text" id="title" name="title" placeholder="What needs to be done?" required>
+        </div>
+        <div style="flex-grow: 1; min-width: 200px;">
+            <label for="description">Description (Optional)</label>
+            <input type="text" id="description" name="description" placeholder="Details...">
         </div>
         <div style="width: 150px;">
             <label for="due_date">Due Date</label>
@@ -43,6 +48,9 @@
 
         <div class="todo-content">
             <span class="todo-title">{{ todo.title }}</span>
+            {% if todo.description %}
+            <div style="font-size: 0.9rem; color: #555; margin-top: 0.25rem;">{{ todo.description }}</div>
+            {% endif %}
             {% if todo.due_date %}
             <span class="todo-meta">Due: {{ todo.due_date }}</span>
             {% endif %}
@@ -50,7 +58,7 @@
 
         <div class="actions">
             <!-- Edit Button (Triggers simple JS prompt for MVP equivalent) -->
-            <!-- Ideally we'd have a modal, but for simplicity let's do a details toggle or js prompt which is "interactive" enough for this demo or better yet, a small integrated form? 
+            <!-- Ideally we'd have a modal, but for simplicity let's do a details toggle or js prompt which is "interactive" enough for this demo or better yet, a small integrated form?
                          Let's keep it clean. I'll make the Update form hidden/toggleable. -->
             <button onclick="document.getElementById('edit-{{ todo.id }}').style.display = 'block'"
                 class="btn-sm btn-link">Edit</button>
@@ -68,8 +76,10 @@
         style="display:none; padding: 1rem; background: var(--background); margin-top: 0.5rem; border-radius: 4px;">
         <form method="POST" action="{% url 'todo-update' todo.id %}">
             {% csrf_token %}
-            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem">
+            <div style="display:flex; flex-direction: column; gap:0.5rem; margin-bottom:0.5rem">
                 <input type="text" name="title" value="{{ todo.title }}" required>
+                <input type="text" name="description" value="{{ todo.description|default:'' }}"
+                    placeholder="Description">
                 <input type="date" name="due_date" value="{{ todo.due_date }}">
             </div>
             <div style="display:flex; gap:0.5rem">
