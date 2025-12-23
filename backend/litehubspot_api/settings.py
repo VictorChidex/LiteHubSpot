@@ -120,12 +120,14 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 # Custom user model
-# AUTH_USER_MODEL = 'api.User'  # Commented out since using mock database
+# Custom user model
+# If you want a custom user, set `AUTH_USER_MODEL = 'api.User'` before creating migrations.
+# AUTH_USER_MODEL = 'api.User'
 
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # 'rest_framework.authentication.TokenAuthentication',  # Using mock auth
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [

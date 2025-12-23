@@ -1,67 +1,76 @@
 from rest_framework import serializers
-from .mock_db import mock_db
+from django.contrib.auth import authenticate, get_user_model
+from .models import Todo
 
 
-class UserSerializer(serializers.Serializer):
-    """Serializer for user data"""
-    id = serializers.CharField(read_only=True)
-    email = serializers.EmailField()
-    username = serializers.CharField()
-    first_name = serializers.CharField(required=False, allow_blank=True)
-    last_name = serializers.CharField(required=False, allow_blank=True)
-    date_joined = serializers.DateTimeField(read_only=True)
+User = get_user_model()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'date_joined')
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'password', 'first_name', 'last_name')
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
 
 class LoginSerializer(serializers.Serializer):
-    """Serializer for login data"""
-    identifier = serializers.CharField()  # email or username
+    identifier = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
         identifier = data.get('identifier')
         password = data.get('password')
 
-        user = mock_db.authenticate_user(identifier, password)
-        if not user:
+        # Try to locate user by email first, then by username
+        user = None
+        try:
+            user = User.objects.get(email=identifier)
+        except User.DoesNotExist:
+            try:
+                user = User.objects.get(username=identifier)
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Invalid credentials')
+
+        if not user.check_password(password):
             raise serializers.ValidationError('Invalid credentials')
 
         data['user'] = user
         return data
 
 
-class TodoSerializer(serializers.Serializer):
-    """Serializer for todo data"""
-    id = serializers.CharField(read_only=True)
-    title = serializers.CharField(max_length=200)
-    description = serializers.CharField(required=False, allow_blank=True)
-    due_date = serializers.DateTimeField(required=False, allow_null=True)
-    priority = serializers.ChoiceField(choices=['low', 'normal', 'high'], default='normal')
-    status = serializers.ChoiceField(choices=['to_do', 'in_progress', 'done'], default='to_do')
-    resolved = serializers.BooleanField(default=False)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
-    user_id = serializers.CharField(read_only=True)
+class TodoSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Todo
+        fields = ('id', 'title', 'description', 'due_date', 'priority', 'status', 'resolved', 'created_at', 'updated_at', 'user')
 
 
-class TodoCreateSerializer(serializers.Serializer):
-    """Serializer for creating todos"""
-    title = serializers.CharField(max_length=200)
-    description = serializers.CharField(required=False, allow_blank=True)
-    due_date = serializers.DateTimeField(required=False, allow_null=True)
-    priority = serializers.ChoiceField(choices=['low', 'normal', 'high'], default='normal')
-    status = serializers.ChoiceField(choices=['to_do', 'in_progress', 'done'], default='to_do')
+class TodoCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ('title', 'description', 'due_date', 'priority', 'status')
 
 
-class TodoUpdateSerializer(serializers.Serializer):
-    """Serializer for updating todos"""
-    title = serializers.CharField(max_length=200, required=False)
-    description = serializers.CharField(required=False, allow_blank=True)
-    due_date = serializers.DateTimeField(required=False, allow_null=True)
-    priority = serializers.ChoiceField(choices=['low', 'normal', 'high'], required=False)
-    status = serializers.ChoiceField(choices=['to_do', 'in_progress', 'done'], required=False)
-    resolved = serializers.BooleanField(required=False)
+class TodoUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ('title', 'description', 'due_date', 'priority', 'status', 'resolved')
 
 
 class StatusUpdateSerializer(serializers.Serializer):
-    """Serializer for updating todo status"""
     status = serializers.ChoiceField(choices=['to_do', 'in_progress', 'done'])

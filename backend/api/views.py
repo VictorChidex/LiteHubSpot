@@ -4,14 +4,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, BrowsableAPIRenderer
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, get_user_model
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from .mock_db import mock_db
 from .serializers import (
-    UserSerializer, LoginSerializer, TodoSerializer,
+    UserSerializer, UserCreateSerializer, LoginSerializer, TodoSerializer,
     TodoCreateSerializer, TodoUpdateSerializer, StatusUpdateSerializer
 )
+
+
+User = get_user_model()
 
 
 class APIRootView(APIView):
@@ -65,24 +68,15 @@ class SignupView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        try:
-            user = mock_db.create_user(
-                email=request.data.get('email'),
-                username=request.data.get('username'),
-                password=request.data.get('password'),
-                first_name=request.data.get('first_name', ''),
-                last_name=request.data.get('last_name', '')
-            )
-            token = mock_db.create_token(user['id'])
-            return Response({
-                'user': user,
-                'token': token,
-                'message': 'User created successfully'
-            }, status=status.HTTP_201_CREATED)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'error': 'Registration failed'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'user': UserSerializer(user).data,
+            'token': token.key,
+            'message': 'User created successfully'
+        }, status=status.HTTP_201_CREATED)
 
 
 class LoginView(APIView):
@@ -90,18 +84,11 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        identifier = request.data.get('identifier')
-        password = request.data.get('password')
-
-        user = mock_db.authenticate_user(identifier, password)
-        if user:
-            token = mock_db.create_token(user['id'])
-            return Response({
-                'user': user,
-                'token': token,
-                'message': 'Login successful'
-            })
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({'user': UserSerializer(user).data, 'token': token.key, 'message': 'Login successful'})
 
 
 class LogoutView(APIView):
@@ -109,104 +96,78 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        # For mock DB, we don't need to do anything special
+        # Delete token to logout
+        if hasattr(request, 'auth') and request.auth:
+            request.auth.delete()
         return Response({'message': 'Logout successful'})
 
 
 class TodoListView(APIView):
     """List and create todos"""
-    permission_classes = [permissions.AllowAny]  # Using mock auth
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # For simplicity, using a mock user ID from header or default
-        user_id = request.headers.get('X-User-ID', 'default-admin-id')
-        todos = mock_db.get_todos_by_user(user_id)
-        return Response(todos)
+        todos = request.user.todos.all()
+        serializer = TodoSerializer(todos, many=True)
+        return Response(serializer.data)
 
     def post(self, request):
-        user_id = request.headers.get('X-User-ID', 'default-admin-id')
-
-        try:
-            todo = mock_db.create_todo(
-                user_id=user_id,
-                title=request.data.get('title'),
-                description=request.data.get('description', ''),
-                due_date=request.data.get('due_date'),
-                priority=request.data.get('priority', 'normal'),
-                status=request.data.get('status', 'to_do')
-            )
-            return Response(todo, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = TodoCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        todo = serializer.save(user=request.user)
+        return Response(TodoSerializer(todo).data, status=status.HTTP_201_CREATED)
 
 
 class TodoDetailView(APIView):
     """Retrieve, update, and delete individual todos"""
-    permission_classes = [permissions.AllowAny]  # Using mock auth
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        todo = mock_db.get_todo_by_id(str(pk))
-        if not todo:
-            return Response({'error': 'Todo not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response(todo)
+        todo = get_object_or_404(request.user.todos, pk=pk)
+        return Response(TodoSerializer(todo).data)
 
     def put(self, request, pk):
-        todo = mock_db.get_todo_by_id(str(pk))
-        if not todo:
-            return Response({'error': 'Todo not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Update allowed fields
-        updates = {}
-        allowed_fields = ['title', 'description', 'due_date', 'priority', 'status', 'resolved']
-        for field in allowed_fields:
-            if field in request.data:
-                updates[field] = request.data[field]
-
-        updated_todo = mock_db.update_todo(str(pk), **updates)
-        if updated_todo:
-            return Response(updated_todo)
-        return Response({'error': 'Update failed'}, status=status.HTTP_400_BAD_REQUEST)
+        todo = get_object_or_404(request.user.todos, pk=pk)
+        serializer = TodoUpdateSerializer(todo, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(TodoSerializer(todo).data)
 
     def delete(self, request, pk):
-        success = mock_db.delete_todo(str(pk))
-        if success:
-            return Response({'message': 'Todo deleted'}, status=status.HTTP_204_NO_CONTENT)
-        return Response({'error': 'Todo not found'}, status=status.HTTP_404_NOT_FOUND)
+        todo = get_object_or_404(request.user.todos, pk=pk)
+        todo.delete()
+        return Response({'message': 'Todo deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
 class TodoResolveView(APIView):
     """Toggle todo resolution status"""
-    permission_classes = [permissions.AllowAny]  # Using mock auth
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
-        todo = mock_db.toggle_todo_resolution(str(pk))
-        if todo:
-            return Response(todo)
-        return Response({'error': 'Todo not found'}, status=status.HTTP_404_NOT_FOUND)
+        todo = get_object_or_404(request.user.todos, pk=pk)
+        todo.resolved = not todo.resolved
+        todo.save()
+        return Response(TodoSerializer(todo).data)
 
 
 class TodoStatusView(APIView):
     """Update todo status"""
-    permission_classes = [permissions.AllowAny]  # Using mock auth
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         new_status = request.data.get('status')
         if new_status not in ['to_do', 'in_progress', 'done']:
             return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
 
-        updated_todo = mock_db.update_todo(str(pk), status=new_status)
-        if updated_todo:
-            return Response(updated_todo)
-        return Response({'error': 'Todo not found'}, status=status.HTTP_404_NOT_FOUND)
+        todo = get_object_or_404(request.user.todos, pk=pk)
+        todo.status = new_status
+        todo.save()
+        return Response(TodoSerializer(todo).data)
 
 
 class UserProfileView(APIView):
     """Get current user profile"""
-    permission_classes = [permissions.AllowAny]  # Using mock auth
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        user_id = request.headers.get('X-User-ID', 'default-admin-id')
-        user = mock_db.get_user_by_id(user_id)
-        if user:
-            return Response(user)
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(UserSerializer(request.user).data)
