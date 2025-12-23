@@ -16,6 +16,11 @@ from .serializers import (
 
 User = get_user_model()
 
+# Initialize SQLAlchemy DB and import models
+from .sqlalchemy_db import init_db, SessionLocal
+from .sql_models import Todo as SQLTodo
+
+init_db()
 
 class APIRootView(APIView):
     """API root endpoint showing available endpoints"""
@@ -107,15 +112,36 @@ class TodoListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        todos = request.user.todos.all()
-        serializer = TodoSerializer(todos, many=True)
-        return Response(serializer.data)
+        db = SessionLocal()
+        try:
+            rows = db.query(SQLTodo).filter(SQLTodo.user_id == request.user.id).all()
+            data = [r.to_dict(user_obj={'id': request.user.id, 'email': request.user.email, 'username': request.user.username}) for r in rows]
+            return Response(data)
+        finally:
+            db.close()
 
     def post(self, request):
-        serializer = TodoCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        todo = serializer.save(user=request.user)
-        return Response(TodoSerializer(todo).data, status=status.HTTP_201_CREATED)
+        # Validate minimal required field
+        title = request.data.get('title')
+        if not title:
+            return Response({'error': 'title is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        db = SessionLocal()
+        try:
+            todo = SQLTodo(
+                user_id=request.user.id,
+                title=title,
+                description=request.data.get('description', ''),
+                due_date=request.data.get('due_date'),
+                priority=request.data.get('priority', 'normal'),
+                status=request.data.get('status', 'to_do')
+            )
+            db.add(todo)
+            db.commit()
+            db.refresh(todo)
+            return Response(todo.to_dict(user_obj={'id': request.user.id, 'email': request.user.email, 'username': request.user.username}), status=status.HTTP_201_CREATED)
+        finally:
+            db.close()
 
 
 class TodoDetailView(APIView):
@@ -123,20 +149,42 @@ class TodoDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        todo = get_object_or_404(request.user.todos, pk=pk)
-        return Response(TodoSerializer(todo).data)
+        db = SessionLocal()
+        try:
+            todo = db.query(SQLTodo).filter(SQLTodo.id == pk, SQLTodo.user_id == request.user.id).first()
+            if not todo:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(todo.to_dict(user_obj={'id': request.user.id, 'email': request.user.email, 'username': request.user.username}))
+        finally:
+            db.close()
 
     def put(self, request, pk):
-        todo = get_object_or_404(request.user.todos, pk=pk)
-        serializer = TodoUpdateSerializer(todo, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(TodoSerializer(todo).data)
+        db = SessionLocal()
+        try:
+            todo = db.query(SQLTodo).filter(SQLTodo.id == pk, SQLTodo.user_id == request.user.id).first()
+            if not todo:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            for field in ['title', 'description', 'due_date', 'priority', 'status', 'resolved']:
+                if field in request.data:
+                    setattr(todo, field, request.data.get(field))
+            db.add(todo)
+            db.commit()
+            db.refresh(todo)
+            return Response(todo.to_dict(user_obj={'id': request.user.id, 'email': request.user.email, 'username': request.user.username}))
+        finally:
+            db.close()
 
     def delete(self, request, pk):
-        todo = get_object_or_404(request.user.todos, pk=pk)
-        todo.delete()
-        return Response({'message': 'Todo deleted'}, status=status.HTTP_204_NO_CONTENT)
+        db = SessionLocal()
+        try:
+            todo = db.query(SQLTodo).filter(SQLTodo.id == pk, SQLTodo.user_id == request.user.id).first()
+            if not todo:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            db.delete(todo)
+            db.commit()
+            return Response({'message': 'Todo deleted'}, status=status.HTTP_204_NO_CONTENT)
+        finally:
+            db.close()
 
 
 class TodoResolveView(APIView):
@@ -144,10 +192,18 @@ class TodoResolveView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
-        todo = get_object_or_404(request.user.todos, pk=pk)
-        todo.resolved = not todo.resolved
-        todo.save()
-        return Response(TodoSerializer(todo).data)
+        db = SessionLocal()
+        try:
+            todo = db.query(SQLTodo).filter(SQLTodo.id == pk, SQLTodo.user_id == request.user.id).first()
+            if not todo:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            todo.resolved = not todo.resolved
+            db.add(todo)
+            db.commit()
+            db.refresh(todo)
+            return Response(todo.to_dict(user_obj={'id': request.user.id, 'email': request.user.email, 'username': request.user.username}))
+        finally:
+            db.close()
 
 
 class TodoStatusView(APIView):
@@ -158,11 +214,18 @@ class TodoStatusView(APIView):
         new_status = request.data.get('status')
         if new_status not in ['to_do', 'in_progress', 'done']:
             return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
-
-        todo = get_object_or_404(request.user.todos, pk=pk)
-        todo.status = new_status
-        todo.save()
-        return Response(TodoSerializer(todo).data)
+        db = SessionLocal()
+        try:
+            todo = db.query(SQLTodo).filter(SQLTodo.id == pk, SQLTodo.user_id == request.user.id).first()
+            if not todo:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            todo.status = new_status
+            db.add(todo)
+            db.commit()
+            db.refresh(todo)
+            return Response(todo.to_dict(user_obj={'id': request.user.id, 'email': request.user.email, 'username': request.user.username}))
+        finally:
+            db.close()
 
 
 class UserProfileView(APIView):

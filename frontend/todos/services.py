@@ -1,91 +1,74 @@
+"""Frontend service layer that talks to the backend API.
+
+This replaces the previous in-memory mock service and proxies calls to
+the backend running at `FRONTEND_API_URL` (env var) or default
+http://127.0.0.1:8001/api/
+"""
+import os
+import requests
+from urllib.parse import urljoin
+
+API_BASE = os.environ.get('FRONTEND_API_URL', 'http://127.0.0.1:8001/api/')
+
+def _build_headers(token=None):
+	headers = {'Content-Type': 'application/json'}
+	if token:
+		headers['Authorization'] = f'Token {token}'
+	return headers
+
+def register_user(email, username, password):
+	url = urljoin(API_BASE, 'auth/signup/')
+	payload = {"email": email, "username": username, "password": password}
+	r = requests.post(url, json=payload, headers=_build_headers())
+	r.raise_for_status()
+	return r.json()
+
+def authenticate_user(identifier, password):
+	url = urljoin(API_BASE, 'auth/login/')
+	payload = {"identifier": identifier, "password": password}
+	r = requests.post(url, json=payload, headers=_build_headers())
+	if r.status_code != 200:
+		return None
+	return r.json()
+
+def get_user_by_token(token):
+	url = urljoin(API_BASE, 'auth/profile/')
+	r = requests.get(url, headers=_build_headers(token))
+	r.raise_for_status()
+	return r.json()
+
+def get_todos(token):
+	url = urljoin(API_BASE, 'todos/')
+	r = requests.get(url, headers=_build_headers(token))
+	r.raise_for_status()
+	return r.json()
+
+def get_todo(todo_id, token):
+	url = urljoin(API_BASE, f'todos/{todo_id}/')
+	r = requests.get(url, headers=_build_headers(token))
+	if r.status_code == 404:
+		return None
+	r.raise_for_status()
+	return r.json()
+
+def create_todo(user_id, title, due_date=None, description="", priority="normal", status="to_do", token=None):
+	url = urljoin(API_BASE, 'todos/')
+	payload = {"title": title, "description": description, "due_date": due_date, "priority": priority, "status": status}
+	r = requests.post(url, json=payload, headers=_build_headers(token))
+	r.raise_for_status()
+	return r.json()
+
+def update_todo(todo_id, **kwargs):
+	token = kwargs.pop('token', None)
+	url = urljoin(API_BASE, f'todos/{todo_id}/')
+	r = requests.put(url, json=kwargs, headers=_build_headers(token))
+	r.raise_for_status()
+	return r.json()
+
+def delete_todo(todo_id, token=None):
+	url = urljoin(API_BASE, f'todos/{todo_id}/')
+	r = requests.delete(url, headers=_build_headers(token))
+	return r.status_code == 204
+
 from datetime import datetime
 import uuid
-
-class MockBackendService:
-    _users = {
-        "admin@example.com": {
-            "id": "default-admin-id",
-            "email": "admin@example.com",
-            "username": "admin",
-            "password": "password"
-        }
-    }
-    _todos = {}  # {id: {id, user_id, title, due_date, resolved}}
-    
-    @classmethod
-    def register_user(cls, email, username, password):
-        # Check uniqueness
-        for user in cls._users.values():
-            if user['email'] == email:
-                raise ValueError("Email already registered")
-            if user['username'] == username:
-                raise ValueError("Username already taken")
-                
-        user_id = str(uuid.uuid4())
-        user = {
-            "id": user_id,
-            "email": email,
-            "username": username,
-            "password": password
-        }
-        cls._users[email] = user
-        return user
-
-    @classmethod
-    def authenticate_user(cls, identifier, password):
-        # identifier can be email or username
-        found_user = None
-        for user in cls._users.values():
-            if user['email'] == identifier or user['username'] == identifier:
-                found_user = user
-                break
-        
-        if found_user and found_user["password"] == password:
-            return found_user
-        return None
-
-    @classmethod
-    def get_user_by_id(cls, user_id):
-        for user in cls._users.values():
-            if user["id"] == user_id:
-                return user
-        return None
-
-    @classmethod
-    def get_todos(cls, user_id):
-        return [todo for todo in cls._todos.values() if todo["user_id"] == user_id]
-
-    @classmethod
-    def create_todo(cls, user_id, title, due_date, description="", priority="normal", status="to_do"):
-        todo_id = str(uuid.uuid4())
-        todo = {
-            "id": todo_id,
-            "user_id": user_id,
-            "title": title,
-            "due_date": due_date,
-            "description": description,
-            "resolved": False,
-            "priority": priority,  # low, normal, high, urgent
-            "status": status  # to_do, in_progress, done
-        }
-        cls._todos[todo_id] = todo
-        return todo
-
-    @classmethod
-    def get_todo(cls, todo_id):
-        return cls._todos.get(todo_id)
-
-    @classmethod
-    def update_todo(cls, todo_id, **kwargs):
-        todo = cls._todos.get(todo_id)
-        if not todo:
-            return None
-        todo.update(kwargs)
-        return todo
-
-    @classmethod
-    def delete_todo(cls, todo_id):
-        if todo_id in cls._todos:
-            del cls._todos[todo_id]
-            return True
-        return False
