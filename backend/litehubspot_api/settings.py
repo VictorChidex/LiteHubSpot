@@ -57,7 +57,7 @@ ROOT_URLCONF = "litehubspot_api.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "api" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

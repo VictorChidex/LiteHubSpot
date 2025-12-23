@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, BrowsableAPIRenderer
 from django.contrib.auth import login, logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -16,26 +17,47 @@ from .serializers import (
 class APIRootView(APIView):
     """API root endpoint showing available endpoints"""
     permission_classes = [permissions.AllowAny]
+    renderer_classes = [JSONRenderer, TemplateHTMLRenderer, BrowsableAPIRenderer]
 
     def get(self, request):
-        return Response({
+        from django.urls import reverse
+
+        # Build absolute URLs using reverse where possible. For detail routes
+        # include a `{uuid}` placeholder (curly braces) to avoid JSON escaping
+        # of angle brackets and to make copy/paste friendly.
+        auth_signup = request.build_absolute_uri(reverse('api:signup'))
+        auth_login = request.build_absolute_uri(reverse('api:login'))
+        auth_logout = request.build_absolute_uri(reverse('api:logout'))
+        auth_profile = request.build_absolute_uri(reverse('api:profile'))
+
+        todos_list = request.build_absolute_uri(reverse('api:todo-list'))
+
+        context = {
             "message": "Welcome to LiteHubSpot API",
             "version": "1.0",
             "endpoints": {
                 "authentication": {
-                    "signup": "/api/auth/signup/",
-                    "login": "/api/auth/login/",
-                    "logout": "/api/auth/logout/",
-                    "profile": "/api/auth/profile/"
+                    "signup": auth_signup,
+                    "login": auth_login,
+                    "logout": auth_logout,
+                    "profile": auth_profile,
                 },
                 "todos": {
-                    "list": "/api/todos/",
-                    "detail": "/api/todos/<uuid>/",
-                    "resolve": "/api/todos/<uuid>/resolve/",
-                    "status": "/api/todos/<uuid>/status/"
+                    "list": todos_list,
+                    "detail": todos_list + "{uuid}/",
+                    "resolve": todos_list + "{uuid}/resolve/",
+                    "status": todos_list + "{uuid}/status/",
                 }
             }
-        })
+        }
+
+        # If the client prefers HTML, render a template with the context.
+        # TemplateHTMLRenderer will be used when the request's Accept header
+        # includes text/html (e.g., a browser).
+        if isinstance(request.accepted_renderer, TemplateHTMLRenderer):
+            return Response(context, template_name='api/root.html')
+
+        return Response(context)
 
 
 class SignupView(APIView):
