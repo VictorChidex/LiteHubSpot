@@ -31,8 +31,8 @@
             <select id="priority" name="priority" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                 <option value="low">🏁 Low</option>
-                <option value="normal" selected>🏁 Normal</option>
-                <option value="high">🏁 High</option>
+                <option value="normal" selected>� Normal</option>
+                <option value="high">🚩 High</option>
                 <option value="urgent">⚠️ Urgent</option>
             </select>
         </div>
@@ -100,8 +100,12 @@
                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {% if todo.priority == 'urgent' %}
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
-                                {% else %}
+                                {% elif todo.priority == 'high' %}
                                     <i class="fas fa-flag mr-1"></i>
+                                {% elif todo.priority == 'normal' %}
+                                    <i class="fas fa-flag-checkered mr-1"></i>
+                                {% else %}
+                                    <i class="fas fa-map-marker mr-1"></i>
                                 {% endif %}
                                 {{ todo.priority|title }}
                             </span>
@@ -145,8 +149,8 @@
                             <select name="priority" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>🏁 Low</option>
-                                <option value="normal" {% if todo.priority == 'normal' %}selected{% endif %}>🏁 Normal</option>
-                                <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>🏁 High</option>
+                                <option value="normal" {% if todo.priority == 'normal' %}selected{% endif %}>� Normal</option>
+                                <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>🚩 High</option>
                                 <option value="urgent" {% if todo.priority == 'urgent' %}selected{% endif %}>⚠️ Urgent</option>
                             </select>
                         </div>
@@ -224,8 +228,12 @@
                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {% if todo.priority == 'urgent' %}
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
-                                {% else %}
+                                {% elif todo.priority == 'high' %}
                                     <i class="fas fa-flag mr-1"></i>
+                                {% elif todo.priority == 'normal' %}
+                                    <i class="fas fa-flag-checkered mr-1"></i>
+                                {% else %}
+                                    <i class="fas fa-map-marker mr-1"></i>
                                 {% endif %}
                                 {{ todo.priority|title }}
                             </span>
@@ -305,8 +313,8 @@
                     <select name="priority" 
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>🏁 Low</option>
-                        <option value="normal" {% if todo.priority == 'normal' %}selected{% endif %}>🏁 Normal</option>
-                        <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>🏁 High</option>
+                        <option value="normal" {% if todo.priority == 'normal' %}selected{% endif %}>� Normal</option>
+                        <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>🚩 High</option>
                         <option value="urgent" {% if todo.priority == 'urgent' %}selected{% endif %}>⚠️ Urgent</option>
                     </select>
                 </div>
