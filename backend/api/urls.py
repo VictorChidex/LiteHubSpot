@@ -4,6 +4,9 @@ from . import views
 app_name = 'api'
 
 urlpatterns = [
+    # API root
+    path('', views.APIRootView.as_view(), name='api-root'),
+
     # Authentication endpoints
     path('auth/signup/', views.SignupView.as_view(), name='signup'),
     path('auth/login/', views.LoginView.as_view(), name='login'),

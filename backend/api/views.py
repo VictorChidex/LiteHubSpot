@@ -13,6 +13,31 @@ from .serializers import (
 )
 
 
+class APIRootView(APIView):
+    """API root endpoint showing available endpoints"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({
+            "message": "Welcome to LiteHubSpot API",
+            "version": "1.0",
+            "endpoints": {
+                "authentication": {
+                    "signup": "/api/auth/signup/",
+                    "login": "/api/auth/login/",
+                    "logout": "/api/auth/logout/",
+                    "profile": "/api/auth/profile/"
+                },
+                "todos": {
+                    "list": "/api/todos/",
+                    "detail": "/api/todos/<uuid>/",
+                    "resolve": "/api/todos/<uuid>/resolve/",
+                    "status": "/api/todos/<uuid>/status/"
+                }
+            }
+        })
+
+
 class SignupView(APIView):
     """User registration endpoint"""
     permission_classes = [permissions.AllowAny]
