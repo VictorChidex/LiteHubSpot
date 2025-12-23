@@ -47,7 +47,7 @@ LiteHubSpot is a lightweight, Django-based Todo application designed to demonstr
 
 ## 🧪 Running Tests
 
-The application comes with a suite of unit and integration tests covering the mock service and views.
+The application comes with a comprehensive suite of **23 unit and integration tests** covering authentication, CRUD operations, priority/status workflows, user isolation, and UI functionality.
 
 ```bash
 cd frontend
