@@ -31,7 +31,7 @@
             <select id="priority" name="priority" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                 <option value="low">🏁 Low</option>
-                <option value="medium" selected>🏁 Medium</option>
+                <option value="normal" selected>🏁 Normal</option>
                 <option value="high">🏁 High</option>
                 <option value="urgent">⚠️ Urgent</option>
             </select>
@@ -96,7 +96,7 @@
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
                                 {% if todo.priority == 'urgent' %}bg-red-100 text-red-800
                                 {% elif todo.priority == 'high' %}bg-orange-100 text-orange-800
-                                {% elif todo.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% elif todo.priority == 'normal' %}bg-yellow-100 text-yellow-800
                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {% if todo.priority == 'urgent' %}
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -145,7 +145,7 @@
                             <select name="priority" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>🏁 Low</option>
-                                <option value="medium" {% if todo.priority == 'medium' %}selected{% endif %}>🏁 Medium</option>
+                                <option value="normal" {% if todo.priority == 'normal' %}selected{% endif %}>🏁 Normal</option>
                                 <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>🏁 High</option>
                                 <option value="urgent" {% if todo.priority == 'urgent' %}selected{% endif %}>⚠️ Urgent</option>
                             </select>
@@ -220,7 +220,7 @@
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium 
                                 {% if todo.priority == 'urgent' %}bg-red-100 text-red-800
                                 {% elif todo.priority == 'high' %}bg-orange-100 text-orange-800
-                                {% elif todo.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% elif todo.priority == 'normal' %}bg-yellow-100 text-yellow-800
                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {% if todo.priority == 'urgent' %}
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -305,7 +305,7 @@
                     <select name="priority" 
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>🏁 Low</option>
-                        <option value="medium" {% if todo.priority == 'medium' %}selected{% endif %}>🏁 Medium</option>
+                        <option value="normal" {% if todo.priority == 'normal' %}selected{% endif %}>🏁 Normal</option>
                         <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>🏁 High</option>
                         <option value="urgent" {% if todo.priority == 'urgent' %}selected{% endif %}>⚠️ Urgent</option>
                     </select>

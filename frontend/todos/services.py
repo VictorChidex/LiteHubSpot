@@ -56,7 +56,7 @@ class MockBackendService:
         return [todo for todo in cls._todos.values() if todo["user_id"] == user_id]
 
     @classmethod
-    def create_todo(cls, user_id, title, due_date, description="", priority="medium", status="to_do"):
+    def create_todo(cls, user_id, title, due_date, description="", priority="normal", status="to_do"):
         todo_id = str(uuid.uuid4())
         todo = {
             "id": todo_id,
@@ -65,7 +65,7 @@ class MockBackendService:
             "due_date": due_date,
             "description": description,
             "resolved": False,
-            "priority": priority,  # low, medium, high, urgent
+            "priority": priority,  # low, normal, high, urgent
             "status": status  # to_do, in_progress, done
         }
         cls._todos[todo_id] = todo
