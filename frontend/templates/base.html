@@ -34,27 +34,31 @@
             <nav class="px-4">
                 <ul class="space-y-2">
                     <li>
-                        <a href="{% url 'todo-list' %}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <a href="{% url 'todo-list' %}"
+                            class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
                             <i class="fas fa-tasks mr-3"></i>
                             Tasks
                         </a>
                     </li>
-                    {% if request.session.user_id %}
+                    {% if request.session.auth_token %}
                     <li>
-                        <a href="{% url 'logout' %}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <a href="{% url 'logout' %}"
+                            class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
                             <i class="fas fa-sign-out-alt mr-3"></i>
                             Logout
                         </a>
                     </li>
                     {% else %}
                     <li>
-                        <a href="{% url 'login' %}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <a href="{% url 'login' %}"
+                            class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
                             <i class="fas fa-sign-in-alt mr-3"></i>
                             Login
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'signup' %}" class="flex items-center px-4 py-2 bg-primary text-white rounded-lg">
+                        <a href="{% url 'signup' %}"
+                            class="flex items-center px-4 py-2 bg-primary text-white rounded-lg">
                             <i class="fas fa-user-plus mr-3"></i>
                             Sign Up
                         </a>
@@ -69,7 +73,7 @@
             <header class="bg-white shadow-sm px-6 py-4">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-semibold">{% block page_title %}Dashboard{% endblock %}</h2>
-                    {% if request.session.user_id %}
+                    {% if request.session.auth_token %}
                     <span class="text-sm text-gray-600">Welcome, {{ request.session.username }}</span>
                     {% endif %}
                 </div>
@@ -79,7 +83,8 @@
                 {% if messages %}
                 <div class="mb-4">
                     {% for message in messages %}
-                    <div class="p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    <div
+                        class="p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
                         {{ message }}
                     </div>
                     {% endfor %}
