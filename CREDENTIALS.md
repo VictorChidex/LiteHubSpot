@@ -64,3 +64,12 @@ curl -X POST http://127.0.0.1:8001/api/auth/login/ \
 - **Database:** Todos are persisted in `/workspaces/LiteHubSpot/backend/db.sqlite3`
 - **Port:** Backend API runs on `http://127.0.0.1:8001`
 - **Frontend:** Runs on `http://127.0.0.1:8000` and uses the backend API automatically
+
+## Django Admin Access
+
+To access the Django Admin interface at [http://127.0.0.1:8001/admin/](http://127.0.0.1:8001/admin/), use the following superuser credentials:
+
+- **Username:** `admin`
+- **Password:** `adminpassword`
+- **Email:** `admin@example.com`
+
