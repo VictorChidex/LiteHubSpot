@@ -23,6 +23,7 @@ class Todo(Base):
     description = Column(Text, default='')
     due_date = Column(String(64), nullable=True)
     due_time = Column(String(64), nullable=True)
+    start_date = Column(String(64), nullable=True)
     priority = Column(String(32), default='normal')
     status = Column(String(32), default='to_do')
     resolved = Column(Boolean, default=False)
@@ -37,6 +38,7 @@ class Todo(Base):
             'description': self.description,
             'due_date': self.due_date,
             'due_time': self.due_time,
+            'start_date': self.start_date,
             'priority': self.priority,
             'status': self.status,
             'resolved': self.resolved,

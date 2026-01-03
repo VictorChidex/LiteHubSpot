@@ -60,19 +60,19 @@ class TodoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Todo
-        fields = ('id', 'title', 'description', 'due_date', 'due_time', 'priority', 'status', 'resolved', 'created_at', 'updated_at', 'user')
+        fields = ('id', 'title', 'description', 'due_date', 'due_time', 'start_date', 'priority', 'status', 'resolved', 'created_at', 'updated_at', 'user')
 
 
 class TodoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = ('title', 'description', 'due_date', 'due_time', 'priority', 'status')
+        fields = ('title', 'description', 'due_date', 'due_time', 'start_date', 'priority', 'status')
 
 
 class TodoUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = ('title', 'description', 'due_date', 'due_time', 'priority', 'status', 'resolved')
+        fields = ('title', 'description', 'due_date', 'due_time', 'start_date', 'priority', 'status', 'resolved')
 
 
 class StatusUpdateSerializer(serializers.Serializer):

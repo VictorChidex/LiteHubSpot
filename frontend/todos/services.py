@@ -51,9 +51,9 @@ def get_todo(todo_id, token):
 	r.raise_for_status()
 	return r.json()
 
-def create_todo(user_id, title, due_date=None, due_time=None, description="", priority="normal", status="to_do", token=None):
+def create_todo(user_id, title, due_date=None, due_time=None, start_date=None, description="", priority="normal", status="to_do", token=None):
 	url = urljoin(API_BASE, 'todos/')
-	payload = {"title": title, "description": description, "due_date": due_date, "due_time": due_time, "priority": priority, "status": status}
+	payload = {"title": title, "description": description, "due_date": due_date, "due_time": due_time, "start_date": start_date, "priority": priority, "status": status}
 	r = requests.post(url, json=payload, headers=_build_headers(token))
 	r.raise_for_status()
 	return r.json()

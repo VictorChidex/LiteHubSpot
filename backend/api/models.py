@@ -25,6 +25,7 @@ class Todo(models.Model):
     description = models.TextField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
     due_time = models.TimeField(blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
     email_sent = models.BooleanField(default=False)
     priority = models.CharField(
         max_length=10,

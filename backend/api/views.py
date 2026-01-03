@@ -134,6 +134,7 @@ class TodoListView(APIView):
                 description=request.data.get('description', ''),
                 due_date=request.data.get('due_date'),
                 due_time=request.data.get('due_time'),
+                start_date=request.data.get('start_date'),
                 priority=request.data.get('priority', 'normal'),
                 status=request.data.get('status', 'to_do')
             )
@@ -165,7 +166,7 @@ class TodoDetailView(APIView):
             todo = db.query(SQLTodo).filter(SQLTodo.id == pk, SQLTodo.user_id == request.user.id).first()
             if not todo:
                 return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-            for field in ['title', 'description', 'due_date', 'due_time', 'priority', 'status', 'resolved']:
+            for field in ['title', 'description', 'due_date', 'due_time', 'start_date', 'priority', 'status', 'resolved']:
                 if field in request.data:
                     setattr(todo, field, request.data.get(field))
             db.add(todo)
