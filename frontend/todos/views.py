@@ -95,11 +95,12 @@ class TodoCreateView(AuthMixin, View):
         token = request.session.get('auth_token')
         title = request.POST.get('title')
         due_date = request.POST.get('due_date')
+        due_time = request.POST.get('due_time')
         description = request.POST.get('description', '')
         priority = request.POST.get('priority', 'medium')
         status = request.POST.get('status', 'to_do')
         if title:
-            services.create_todo(None, title, due_date, description, priority, status, token=token)
+            services.create_todo(None, title, due_date, due_time, description, priority, status, token=token)
             messages.success(request, "Todo created!")
         return redirect('todo-list')
 
@@ -112,10 +113,11 @@ class TodoUpdateView(AuthMixin, View):
         if todo and user and todo.get('user') and todo['user'].get('id') == user.get('id'):
             title = request.POST.get('title')
             due_date = request.POST.get('due_date')
+            due_time = request.POST.get('due_time')
             description = request.POST.get('description', '')
             priority = request.POST.get('priority', todo.get('priority', 'medium'))
             status = request.POST.get('status', todo.get('status', 'to_do'))
-            services.update_todo(todo_id, title=title, due_date=due_date, description=description, priority=priority, status=status, token=token)
+            services.update_todo(todo_id, title=title, due_date=due_date, due_time=due_time, description=description, priority=priority, status=status, token=token)
         return redirect('todo-list')
 
 

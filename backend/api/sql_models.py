@@ -22,9 +22,11 @@ class Todo(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, default='')
     due_date = Column(String(64), nullable=True)
+    due_time = Column(String(64), nullable=True)
     priority = Column(String(32), default='normal')
     status = Column(String(32), default='to_do')
     resolved = Column(Boolean, default=False)
+    email_sent = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -34,6 +36,7 @@ class Todo(Base):
             'title': self.title,
             'description': self.description,
             'due_date': self.due_date,
+            'due_time': self.due_time,
             'priority': self.priority,
             'status': self.status,
             'resolved': self.resolved,
