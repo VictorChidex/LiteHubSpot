@@ -28,11 +28,14 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    identifier = serializers.CharField()
+    identifier = serializers.CharField(required=False)
+    username = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        identifier = data.get('identifier')
+        identifier = data.get('identifier') or data.get('username')
+        if not identifier:
+            raise serializers.ValidationError({'identifier': 'This field is required.'})
         password = data.get('password')
 
         # Try to locate user by email first, then by username
